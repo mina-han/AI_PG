@@ -1,0 +1,152 @@
+# Git 명령어 실행 순서 (복사해서 사용)
+
+# ============================================
+# 1. Git 설치 확인
+# ============================================
+git --version
+
+# Git이 없다면 설치:
+# Windows: https://git-scm.com/download/win
+
+
+# ============================================
+# 2. GitHub에서 새 저장소 생성
+# ============================================
+# 브라우저에서:
+# 1. https://github.com 접속
+# 2. 우측 상단 '+' → 'New repository'
+# 3. Repository name: call-orchestrator
+# 4. Public/Private 선택
+# 5. 'Create repository' 클릭
+
+
+# ============================================
+# 3. 로컬 Git 초기화 및 업로드 (PowerShell)
+# ============================================
+cd F:\25_Cursor_Workspace\AI_PG\call-orchestrator
+
+git init
+
+git add .
+
+git commit -m "Initial commit: SOLAPI 음성 메시지 연동 완료"
+
+# your-username을 실제 GitHub 사용자명으로 변경
+git remote add origin https://github.com/your-username/call-orchestrator.git
+
+git branch -M main
+
+git push -u origin main
+
+
+# ============================================
+# 4. GitHub 인증 (처음 push 시)
+# ============================================
+# Username: GitHub 사용자명
+# Password: Personal Access Token 입력
+
+# Personal Access Token 생성:
+# GitHub → Settings → Developer settings → 
+# Personal access tokens → Tokens (classic) → 
+# Generate new token → repo 체크 → Generate
+
+
+# ============================================
+# 5. 다른 PC에서 사용 (새 PC)
+# ============================================
+# 저장소 클론
+git clone https://github.com/your-username/call-orchestrator.git
+
+cd call-orchestrator
+
+# 가상환경 생성 및 활성화 (Windows)
+python -m venv venv
+.\venv\Scripts\activate
+
+# 패키지 설치
+pip install -r requirements.txt
+
+# 환경 변수 설정
+copy env.example .env
+notepad .env
+
+# 서버 실행
+uvicorn app.main:app --reload
+
+
+# ============================================
+# 6. 코드 업데이트 (변경 후)
+# ============================================
+# 변경사항 확인
+git status
+
+# 모든 변경사항 추가
+git add .
+
+# 커밋
+git commit -m "변경 내용 설명"
+
+# GitHub에 업로드
+git push
+
+
+# ============================================
+# 7. 최신 코드 받기 (다른 PC에서)
+# ============================================
+git pull origin main
+
+
+# ============================================
+# 8. 유용한 Git 명령어
+# ============================================
+# 상태 확인
+git status
+
+# 변경 이력 보기
+git log
+
+# 원격 저장소 확인
+git remote -v
+
+# 브랜치 목록
+git branch
+
+# 특정 파일만 추가
+git add filename.py
+
+# 커밋 취소
+git reset --soft HEAD~1
+
+# 변경사항 버리기
+git checkout -- filename.py
+
+
+# ============================================
+# 9. 문제 해결
+# ============================================
+# Git 인증 오류 시
+git config --global credential.helper store
+
+# 원격 저장소 변경
+git remote set-url origin https://github.com/new-username/call-orchestrator.git
+
+# 강제 push (주의!)
+git push -f origin main
+
+
+# ============================================
+# 10. .gitignore 확인
+# ============================================
+# 다음 파일들은 자동으로 제외됨:
+# - .env (환경 변수)
+# - venv/ (가상환경)
+# - __pycache__/ (캐시)
+# - *.db (데이터베이스)
+# - *.log (로그)
+
+
+# ============================================
+# 완료!
+# ============================================
+# GitHub 저장소 URL:
+# https://github.com/your-username/call-orchestrator
