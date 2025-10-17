@@ -97,7 +97,7 @@ def twilio_gather(incident_id: int, Digits: str | None = Form(None)) -> Response
 @router.post("/status")
 async def twilio_status(request: Request, incident_id: int) -> dict:
     """Handle Twilio status callbacks for call events"""
-    from app.services.escalation import acknowledge_incident
+    from app.services.escalation import acknowledge_incident, retry_next
     
     form = await request.form()
     call_status = form.get("CallStatus")
@@ -110,6 +110,16 @@ async def twilio_status(request: Request, incident_id: int) -> dict:
     if call_status == "answered":
         acknowledge_incident(incident_id, dtmf=None)
         print(f"Incident {incident_id} automatically acknowledged (call answered)")
+    
+    # If call completed but not answered, try next person
+    elif call_status == "completed":
+        with get_session() as session:
+            incident = get_incident(session, incident_id)
+            if incident and incident.status != "ack":
+                print(f"Call completed but not answered - trying next person")
+                tts_text = incident.tts_text
+                retry_result = retry_next(incident_id, tts_text)
+                print(f"Retry result: {retry_result}")
     
     # Store call status in database for audit trail
     with get_session() as session:
