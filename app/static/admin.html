@@ -433,22 +433,39 @@
             <tbody>
               ${data.map(inc => {
                 const statusBadge = inc.status === 'ack' ? 'badge-success' : 'badge-warning';
-                const statusText = inc.status === 'ack' ? '확인됨' : '대기중';
+                const statusText = inc.status === 'ack' ? '✅ 확인됨' : '⏳ 미확인';
                 
                 const callResults = inc.calls.map(call => {
                   let badge = 'badge-danger';
                   let text = call.result;
                   if (call.result === 'answered' || call.result === 'ack') {
                     badge = 'badge-success';
-                    text = '성공';
+                    text = '✓ 성공';
                   } else if (call.result === 'no_answer') {
-                    text = '무응답';
+                    badge = 'badge-warning';
+                    text = '✗ 무응답';
+                  } else if (call.result === 'failed') {
+                    text = '✗ 실패';
+                  } else if (call.result === 'initiated') {
+                    badge = 'badge-info';
+                    text = '→ 발신중';
                   }
                   
                   return `<span class="badge ${badge}">${text}</span>`;
                 }).join(' ');
                 
-                const createdAt = new Date(inc.created_at).toLocaleString('ko-KR');
+                // UTC 시간을 한국 시간(KST, UTC+9)으로 변환
+                const utcDate = new Date(inc.created_at);
+                const kstDate = new Date(utcDate.getTime() + (9 * 60 * 60 * 1000));
+                const createdAt = kstDate.toLocaleString('ko-KR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false
+                });
                 
                 return `
                   <tr>
