@@ -258,6 +258,24 @@ async def escalate_with_status(request: SimulatorCallRequest):
             # 통화 상태 확인 (최대 20초 대기 - 빠른 실패 감지)
             result = await check_call_status(client, call_sid, max_wait=20)
             
+            # DB에 통화 결과 저장
+            if incident_id:
+                try:
+                    from app.db import log_call_attempt
+                    with get_session() as session:
+                        call_result = "answered" if result['status'] == 'answered' else "no_answer"
+                        log_call_attempt(
+                            session=session,
+                            incident_id=incident_id,
+                            callee=contact['phone'],
+                            provider="twilio",
+                            result=call_result,
+                            duration_sec=result.get('duration', 0)
+                        )
+                        print(f"[SIMULATOR] DB에 통화 기록 저장: {call_result}")
+                except Exception as e:
+                    print(f"[SIMULATOR] DB 저장 실패: {e}")
+            
             # 결과 전송
             if result['status'] == 'answered':
                 yield f"data: {json.dumps({'type': 'call_answered', 'attempt': idx, 'name': contact['name'], 'duration': result['duration'], 'timestamp': get_timestamp()}, ensure_ascii=False)}\n\n"
