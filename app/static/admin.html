@@ -232,20 +232,178 @@
     }
     
     @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      header {
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      
+      header > div {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      .subtitle {
+        font-size: 14px;
+      }
+      
+      .refresh-btn {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 15px;
+      }
+      
       .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
       }
       
-      table {
-        font-size: 12px;
-      }
-      
-      th, td {
-        padding: 8px;
+      .stat-card {
+        padding: 12px;
       }
       
       .stat-value {
-        font-size: 28px;
+        font-size: 22px;
+      }
+      
+      .stat-label {
+        font-size: 11px;
+      }
+      
+      .stat-sub {
+        font-size: 11px;
+      }
+      
+      .section {
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      
+      .section-title {
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+      
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      table {
+        font-size: 11px;
+        min-width: 100%;
+      }
+      
+      th, td {
+        padding: 6px 4px;
+        max-width: none;
+      }
+      
+      /* 모바일에서 일부 컬럼 숨기기 */
+      table th:nth-child(4),
+      table td:nth-child(4) {
+        display: none;
+      }
+      
+      /* ID 컬럼 */
+      table th:nth-child(1),
+      table td:nth-child(1) {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        text-align: center;
+      }
+      
+      /* 요약 컬럼 */
+      table th:nth-child(2),
+      table td:nth-child(2) {
+        width: 90px;
+        min-width: 90px;
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      /* 상태 컬럼 */
+      table th:nth-child(3),
+      table td:nth-child(3) {
+        width: 55px;
+        min-width: 55px;
+        max-width: 55px;
+        text-align: center;
+      }
+      
+      /* 통화 결과 컬럼 */
+      table th:nth-child(5),
+      table td:nth-child(5) {
+        width: 55px;
+        min-width: 55px;
+        max-width: 55px;
+        font-size: 9px;
+        text-align: center;
+      }
+      
+      table td:nth-child(5) {
+        line-height: 1.4;
+      }
+      
+      /* 생성 시간 컬럼 */
+      table th:nth-child(6),
+      table td:nth-child(6) {
+        width: 60px;
+        min-width: 60px;
+        max-width: 60px;
+        font-size: 9px;
+        white-space: normal;
+        word-break: keep-all;
+        text-align: center;
+      }
+      
+      .bar-chart {
+        gap: 2px;
+        padding: 0 4px;
+      }
+      
+      .bar {
+        min-width: 0;
+        flex: 1;
+      }
+      
+      .bar-label {
+        font-size: 9px;
+        bottom: -22px;
+      }
+      
+      .bar-value {
+        font-size: 10px;
+      }
+      
+      .chart-container {
+        padding: 0 4px;
+        min-height: 180px;
+      }
+      
+      .badge {
+        padding: 2px 4px;
+        font-size: 8px;
+        border-radius: 6px;
+        margin: 1px 0;
+        display: inline-block;
+      }
+      
+      /* 모바일에서 통화 결과 배지 세로 배치 */
+      table td:nth-child(5) .badge {
+        display: block;
+        margin: 2px auto;
+        width: fit-content;
       }
     }
   </style>
@@ -434,67 +592,67 @@
         }
         
         const tableHTML = `
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>요약</th>
-                <th>상태</th>
-                <th>시도</th>
-                <th>통화 결과</th>
-                <th>생성 시간</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.map(inc => {
-                const statusBadge = inc.status === 'ack' ? 'badge-success' : 'badge-warning';
-                const statusText = inc.status === 'ack' ? '✅ 확인됨' : '⏳ 미확인';
-                
-                const callResults = inc.calls.map(call => {
-                  let badge = 'badge-danger';
-                  let text = call.result;
-                  if (call.result === 'answered' || call.result === 'ack') {
-                    badge = 'badge-success';
-                    text = '✓ 성공';
-                  } else if (call.result === 'no_answer') {
-                    badge = 'badge-warning';
-                    text = '✗ 무응답';
-                  } else if (call.result === 'failed') {
-                    text = '✗ 실패';
-                  } else if (call.result === 'initiated') {
-                    badge = 'badge-info';
-                    text = '→ 발신중';
-                  }
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>요약</th>
+                  <th>상태</th>
+                  <th>시도</th>
+                  <th>통화 결과</th>
+                  <th>생성 시간</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.map(inc => {
+                  const statusBadge = inc.status === 'ack' ? 'badge-success' : 'badge-warning';
+                  const statusText = inc.status === 'ack' ? '✅ 확인됨' : '⏳ 미확인';
                   
-                  return `<span class="badge ${badge}">${text}</span>`;
-                }).join(' ');
-                
-                // UTC 시간을 한국 시간(KST, UTC+9)으로 변환
-                const utcDate = new Date(inc.created_at);
-                const kstDate = new Date(utcDate.getTime() + (9 * 60 * 60 * 1000));
-                const createdAt = kstDate.toLocaleString('ko-KR', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false
-                });
-                
-                return `
-                  <tr>
-                    <td>#${inc.id}</td>
-                    <td>${inc.summary}</td>
-                    <td><span class="badge ${statusBadge}">${statusText}</span></td>
-                    <td>${inc.attempts}</td>
-                    <td>${callResults || '-'}</td>
-                    <td>${createdAt}</td>
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
+                  const callResults = inc.calls.map(call => {
+                    let badge = 'badge-danger';
+                    let text = call.result;
+                    if (call.result === 'answered' || call.result === 'ack') {
+                      badge = 'badge-success';
+                      text = '✓ 성공';
+                    } else if (call.result === 'no_answer') {
+                      badge = 'badge-warning';
+                      text = '✗ 무응답';
+                    } else if (call.result === 'failed') {
+                      text = '✗ 실패';
+                    } else if (call.result === 'initiated') {
+                      badge = 'badge-info';
+                      text = '→ 발신중';
+                    }
+                    
+                    return `<span class="badge ${badge}">${text}</span>`;
+                  }).join(' ');
+                  
+                  // UTC 시간을 한국 시간(KST, UTC+9)으로 변환
+                  const utcDate = new Date(inc.created_at);
+                  const kstDate = new Date(utcDate.getTime() + (9 * 60 * 60 * 1000));
+                  
+                  // 모바일을 위한 짧은 형식: MM/DD HH:mm
+                  const month = String(kstDate.getMonth() + 1).padStart(2, '0');
+                  const day = String(kstDate.getDate()).padStart(2, '0');
+                  const hour = String(kstDate.getHours()).padStart(2, '0');
+                  const minute = String(kstDate.getMinutes()).padStart(2, '0');
+                  const createdAt = `${month}/${day} ${hour}:${minute}`;
+                  
+                  return `
+                    <tr>
+                      <td>#${inc.id}</td>
+                      <td>${inc.summary}</td>
+                      <td><span class="badge ${statusBadge}">${statusText}</span></td>
+                      <td>${inc.attempts}</td>
+                      <td>${callResults || '-'}</td>
+                      <td>${createdAt}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
         `;
         
         document.getElementById('recentIncidents').innerHTML = tableHTML;
