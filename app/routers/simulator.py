@@ -76,6 +76,7 @@ async def check_call_status(client: Client, call_sid: str, max_wait: int = 20) -
     """
     start_time = time.time()
     in_progress_detected = False  # in-progress 상태를 한번이라도 감지했는지
+    in_progress_start_time = None  # in-progress 시작 시간
     check_count = 0  # 체크 횟수
     
     while time.time() - start_time < max_wait:
@@ -112,14 +113,16 @@ async def check_call_status(client: Client, call_sid: str, max_wait: int = 20) -
                 
                 print(f"Call completed - duration: {duration}s, answered_by: {answered_by}, in_progress_detected: {in_progress_detected}")
                 
-                # in-progress 상태를 한번이라도 감지했으면 전화를 받은 것
-                if in_progress_detected:
-                    return {"status": "answered", "duration": duration if duration > 0 else 1}
-                # duration이 조금이라도 있으면 전화를 받은 것으로 간주
-                elif duration > 0:
+                # 실제로 통화가 이루어졌는지 확인: duration이 최소 3초 이상이어야 함
+                # (전화를 받고 메시지를 들었다면 최소 3초는 걸림)
+                if duration >= 3:
                     return {"status": "answered", "duration": duration}
+                # in-progress가 감지되었지만 duration이 짧으면 즉시 끊은 것
+                elif in_progress_detected and duration > 0:
+                    print(f"Call was briefly in-progress but duration too short ({duration}s) - marking as no-answer")
+                    return {"status": "no-answer", "duration": duration}
                 else:
-                    # duration이 0이면 전화 거절 또는 즉시 끊김
+                    # duration이 0이거나 매우 짧으면 전화 거절 또는 즉시 끊김
                     return {"status": "no-answer", "duration": 0}
             
             elif status == "busy":
@@ -137,25 +140,38 @@ async def check_call_status(client: Client, call_sid: str, max_wait: int = 20) -
             
             elif status == "in-progress":
                 # 전화가 연결되어 통화 중 상태 - completed 될 때까지 대기
-                in_progress_detected = True
+                if not in_progress_detected:
+                    in_progress_detected = True
+                    in_progress_start_time = time.time()
+                    print(f"Call in progress detected at {in_progress_start_time - start_time:.1f}s")
                 print(f"Call in progress - waiting for completion...")
                 await asyncio.sleep(1)  # 통화 중에는 천천히 체크
                 continue
                 
         except Exception as e:
             print(f"Error checking call status: {e}")
-            # in-progress가 감지되었다면 네트워크 에러도 성공으로 처리 (전화 수신으로 인한 끊김)
-            if in_progress_detected:
-                print(f"Network error during call, but in-progress was detected -> marking as answered")
-                return {"status": "answered", "duration": 1}
-            # 네트워크 에러가 반복되면 재시도 (최대 3번)
+            # in-progress가 감지되었고 최소 3초 이상 통화했다면 성공으로 처리
+            if in_progress_detected and in_progress_start_time:
+                elapsed = time.time() - in_progress_start_time
+                if elapsed >= 3:
+                    print(f"Network error during call, but in-progress lasted {elapsed:.1f}s -> marking as answered")
+                    return {"status": "answered", "duration": int(elapsed)}
+                else:
+                    print(f"Network error, in-progress only lasted {elapsed:.1f}s -> marking as no-answer")
+                    return {"status": "no-answer", "duration": 0}
+            # 네트워크 에러가 반복되면 재시도
             await asyncio.sleep(1)
             continue
     
-    # 타임아웃 - in-progress가 감지되었다면 성공으로 처리
-    if in_progress_detected:
-        print(f"Timeout but in-progress was detected -> marking as answered")
-        return {"status": "answered", "duration": 1}
+    # 타임아웃 - in-progress가 감지되었고 최소 3초 이상이라면 성공으로 처리
+    if in_progress_detected and in_progress_start_time:
+        elapsed = time.time() - in_progress_start_time
+        if elapsed >= 3:
+            print(f"Timeout but in-progress lasted {elapsed:.1f}s -> marking as answered")
+            return {"status": "answered", "duration": int(elapsed)}
+        else:
+            print(f"Timeout, in-progress only lasted {elapsed:.1f}s -> marking as no-answer")
+            return {"status": "no-answer", "duration": 0}
     
     return {"status": "timeout", "duration": 0}
 
