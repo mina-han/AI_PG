@@ -70,9 +70,11 @@
       transition: all 0.3s ease;
       cursor: pointer;
       text-decoration: none;
-      display: block;
+      display: flex;
+      flex-direction: column;
       position: relative;
       overflow: hidden;
+      min-height: 480px;
     }
     .option-card::before {
       content: '';
@@ -115,6 +117,7 @@
       list-style: none;
       padding: 0;
       margin-bottom: 20px;
+      flex-grow: 1;
     }
     .option-features li {
       font-size: 14px;
@@ -196,6 +199,7 @@
       .option-card { 
         padding: 24px;
         border-radius: 12px;
+        min-height: auto;
       }
       .option-icon { 
         font-size: 48px;
@@ -289,12 +293,13 @@
       <a href="/static/daily_report.html" class="option-card">
         <span class="option-icon">📊</span>
         <div class="option-title">일일 상황 보고 체험</div>
-        <div class="option-desc">매일 아침 AI가 야간 알람을 자동으로 수집·분석·요약하여 관련 부서에 공유하는 시스템을 체험합니다.</div>
+        <div class="option-desc">매일 아침 08시, AI가 야간 알람을 자동으로 수집·분석·요약하여 관련 부서에 공유하는 시스템을 체험합니다.<br><span style="font-size:0.9em;color:#64748b;margin-top:4px;display:inline-block">(수천 건의 알람을 3초 안에 분석 완료)</span></div>
         <ul class="option-features">
-          <li>야간 알람 자동 수집</li>
-          <li>LLM 기반 자동 분석</li>
-          <li>핵심만 요약한 리포트</li>
-          <li>Swing 메일 자동 공유</li>
+          <li>야간 알람 자동 수집 (Critical/Major/Warning/Minor)</li>
+          <li>LLM 기반 패턴 인식 및 분석</li>
+          <li>핵심만 추출한 요약 리포트</li>
+          <li>관련 부서별 Swing 메일 자동 공유</li>
+          <li>반복 알람 및 주의 항목 자동 분류</li>
         </ul>
         <div class="option-btn">🚀 일일 보고 체험하기</div>
       </a>
