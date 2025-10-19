@@ -113,16 +113,17 @@ async def check_call_status(client: Client, call_sid: str, max_wait: int = 20) -
                 
                 print(f"Call completed - duration: {duration}s, answered_by: {answered_by}, in_progress_detected: {in_progress_detected}")
                 
-                # 실제로 통화가 이루어졌는지 확인: duration이 최소 3초 이상이어야 함
-                # (전화를 받고 메시지를 들었다면 최소 3초는 걸림)
-                if duration >= 3:
+                # 실제로 통화가 이루어졌는지 엄격하게 확인:
+                # 1. duration이 최소 5초 이상 (전화 받고 메시지 듣기 시작하면 최소 5초)
+                # 2. answered_by가 machine/fax가 아님 (사람이 받은 경우)
+                if duration >= 5 and answered_by not in ['machine', 'fax']:
                     return {"status": "answered", "duration": duration}
-                # in-progress가 감지되었지만 duration이 짧으면 즉시 끊은 것
-                elif in_progress_detected and duration > 0:
-                    print(f"Call was briefly in-progress but duration too short ({duration}s) - marking as no-answer")
+                # duration은 있지만 너무 짧거나 자동응답기가 받은 경우
+                elif duration > 0:
+                    print(f"Call duration too short ({duration}s) or answered_by={answered_by} - marking as no-answer")
                     return {"status": "no-answer", "duration": duration}
                 else:
-                    # duration이 0이거나 매우 짧으면 전화 거절 또는 즉시 끊김
+                    # duration이 0이면 전화 거절 또는 즉시 끊김
                     return {"status": "no-answer", "duration": 0}
             
             elif status == "busy":
@@ -150,10 +151,10 @@ async def check_call_status(client: Client, call_sid: str, max_wait: int = 20) -
                 
         except Exception as e:
             print(f"Error checking call status: {e}")
-            # in-progress가 감지되었고 최소 3초 이상 통화했다면 성공으로 처리
+            # in-progress가 감지되었고 최소 5초 이상 통화했다면 성공으로 처리
             if in_progress_detected and in_progress_start_time:
                 elapsed = time.time() - in_progress_start_time
-                if elapsed >= 3:
+                if elapsed >= 5:
                     print(f"Network error during call, but in-progress lasted {elapsed:.1f}s -> marking as answered")
                     return {"status": "answered", "duration": int(elapsed)}
                 else:
@@ -163,10 +164,10 @@ async def check_call_status(client: Client, call_sid: str, max_wait: int = 20) -
             await asyncio.sleep(1)
             continue
     
-    # 타임아웃 - in-progress가 감지되었고 최소 3초 이상이라면 성공으로 처리
+    # 타임아웃 - in-progress가 감지되었고 최소 5초 이상이라면 성공으로 처리
     if in_progress_detected and in_progress_start_time:
         elapsed = time.time() - in_progress_start_time
-        if elapsed >= 3:
+        if elapsed >= 5:
             print(f"Timeout but in-progress lasted {elapsed:.1f}s -> marking as answered")
             return {"status": "answered", "duration": int(elapsed)}
         else:
