@@ -364,8 +364,10 @@
         
         const barsHTML = data.map(d => {
           const height = (d.count / maxCount) * 100;
-          const date = new Date(d.hour);
-          const label = date.getHours() + ':00';
+          // UTC 시간을 한국 시간(KST, UTC+9)으로 변환
+          const utcDate = new Date(d.hour);
+          const kstDate = new Date(utcDate.getTime() + (9 * 60 * 60 * 1000));
+          const label = kstDate.getHours() + ':00';
           
           return `
             <div class="bar" style="height: ${height}%;">
