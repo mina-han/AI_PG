@@ -105,18 +105,23 @@
       background: #667eea;
       color: white;
       border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
+      padding: 12px 24px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 600;
       transition: all 0.2s;
-      margin-left: auto;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     }
     
     .refresh-btn:hover {
       background: #5568d3;
-      transform: scale(1.05);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .refresh-btn:active {
+      transform: translateY(0);
     }
     
     table {
@@ -248,8 +253,13 @@
 <body>
   <div class="container">
     <header>
-      <h1>🛡️ 관리자 대시보드</h1>
-      <p class="subtitle">솔리아 (SOL-IA) 시스템 모니터링 및 통계</p>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1>🛡️ 관리자 대시보드</h1>
+          <p class="subtitle">솔리아 (SOL-IA) 시스템 모니터링 및 통계</p>
+        </div>
+        <button class="refresh-btn" onclick="loadData()">🔄 전체 새로고침</button>
+      </div>
     </header>
 
     <!-- 주요 통계 -->
@@ -261,7 +271,6 @@
     <div class="section">
       <div class="section-title">
         📈 시간대별 트래픽 (최근 24시간)
-        <button class="refresh-btn" onclick="loadData()">새로고침</button>
       </div>
       <div class="chart-container">
         <div class="bar-chart" id="trafficChart">
