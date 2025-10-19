@@ -712,7 +712,9 @@
                     
                     if(data.type === 'escalation_complete' || data.type === 'escalation_failed'){
                       completed = true;
-                      resolve({success: true, calls: callResults, callSid: callSidRef.value});
+                      // escalation_complete는 성공, escalation_failed는 실패
+                      const isSuccess = data.type === 'escalation_complete';
+                      resolve({success: isSuccess, calls: callResults, callSid: callSidRef.value});
                       return;
                     }
                   } catch(e){
@@ -908,6 +910,10 @@
     
     // 5 - 호전환 기록 확인 (전화 연결 성공 시에만)
     setStepStatus(5,"active");
+    
+    // 디버깅: callSuccess 상태 확인
+    console.log(`[DEBUG] callSuccess: ${callSuccess}, apiResult:`, apiResult);
+    pushLog(`🔍 전화 연결 상태: ${callSuccess ? '성공' : '실패'}`);
     
     // 전화가 최소 1번이라도 성공했을 때만 호전환 기록 확인
     if(callSuccess && apiResult && apiResult.callSid) {
