@@ -40,7 +40,7 @@ def create_twiml(message: str, contact_name: str = None, incident_id: int = None
         # 문장 시작 전 짧은 pause로 첫 글자 보호
         say_tags.append('<Pause length="0.3"/>')
         say_tags.append(f'<Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">{sentence}.</prosody></Say>')
-        say_tags.append('<Pause length="0.4"/>')
+        say_tags.append('<Pause length="0.2"/>')
     
     first_part = '\n  '.join(say_tags)
     
