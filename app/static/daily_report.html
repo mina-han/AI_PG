@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>AI 인프라비서 - 일일 상황 보고 체험</title>
+  <style>
+    :root {
+      --primary:#0046ff;
+      --bg:#f8fafc;
+      --text:#1e293b;
+      --border:#e2e8f0;
+      --accent:#22c55e;
+      --card:#ffffff;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--text);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    }
+    .brand {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+    .sub {
+      font-size: 16px;
+      color: #64748b;
+      margin-bottom: 30px;
+    }
+    
+    .problem-box {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      border: 2px solid #f87171;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .problem-box h2 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      color: #dc2626;
+      margin-bottom: 12px;
+    }
+    .problem-box p {
+      color: #7f1d1d;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .btn {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn.primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    .btn.secondary {
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    
+    .demo-area {
+      background: #f8fafc;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      min-height: 400px;
+      scroll-behavior: smooth;
+    }
+    
+    .step {
+      background: white;
+      border-left: 4px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+      opacity: 0.4;
+    }
+    .step.active {
+      opacity: 1;
+      border-left-color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+    .step.done {
+      opacity: 1;
+      border-left-color: #22c55e;
+    }
+    .step-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .step-status {
+      font-size: 14px;
+      color: #64748b;
+    }
+    .step-data {
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+    }
+    .step-data.show {
+      max-height: 500px;
+    }
+    
+    .report-box {
+      background: white;
+      border: 2px solid #10b981;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.5s ease;
+    }
+    .report-box.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .report-box h3 {
+      color: #047857;
+      font-size: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .report-item {
+      padding: 12px;
+      background: #f0fdf4;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    .report-item strong {
+      color: #047857;
+    }
+    
+    .nav-link {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 12px 24px;
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .nav-link:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: #94a3b8;
+      font-size: 13px;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    @media only screen and (max-width: 760px) {
+      body { 
+        padding: 12px;
+        padding-top: 16px;
+      }
+      .container { 
+        padding: 28px 20px;
+        border-radius: 16px;
+      }
+      .brand {
+        padding: 8px 16px;
+        font-size: 12px;
+        margin-bottom: 16px;
+      }
+      h1 { 
+        font-size: 24px;
+        margin-bottom: 12px;
+        line-height: 1.3;
+      }
+      .sub { 
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+      .problem-box {
+        padding: 16px;
+        margin-bottom: 20px;
+      }
+      .problem-box h2 {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+      .problem-box p {
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .controls { 
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .btn { 
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+      }
+      .demo-area { 
+        padding: 16px;
+        min-height: auto;
+      }
+      .step {
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .step-title {
+        font-size: 15px;
+        margin-bottom: 8px;
+      }
+      .step-status {
+        font-size: 13px;
+      }
+      .step-data {
+        font-size: 13px;
+        padding: 12px;
+        line-height: 1.6;
+      }
+      .report-box {
+        padding: 16px;
+        margin-top: 20px;
+      }
+      .report-box h3 {
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+      .report-item {
+        padding: 10px;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        font-size: 12px;
+      }
+    }
+    
+    @media only screen and (max-width: 480px) {
+      body {
+        padding: 8px;
+        padding-top: 12px;
+      }
+      .container {
+        padding: 24px 16px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      .sub {
+        font-size: 13px;
+      }
+      .problem-box {
+        padding: 14px;
+      }
+      .problem-box h2 {
+        font-size: 15px;
+      }
+      .problem-box p {
+        font-size: 12px;
+      }
+      .step {
+        padding: 14px;
+      }
+      .step-title {
+        font-size: 14px;
+      }
+      .step-data {
+        font-size: 12px;
+        padding: 10px;
+      }
+      .report-box {
+        padding: 14px;
+        margin-top: 16px;
+      }
+      .report-box h3 {
+        font-size: 15px;
+        margin-bottom: 10px;
+      }
+      .report-item {
+        padding: 8px;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <span class="brand">SHINHAN DS</span>
+    <h1>AI 인프라비서 - 일일 상황 보고 체험</h1>
+    <div class="sub">매일 아침 08시, AI가 야간 알람을 자동으로 요약하여 관련 부서에 공유합니다. <a href="/static/index.html" style="color:#667eea;text-decoration:none;font-weight:600">← 메인으로</a></div>
+
+    <div class="problem-box">
+      <h2>
+        <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        기존 문제점
+      </h2>
+      <p>📊 매일 아침 수천 건의 Major 이하 알람을 수동으로 취합하고 요약하는 데 1~2시간 소요<br>🔒 정보가 제한된 인원에게만 공유되어 투명성 부족</p>
+    </div>
+
+    <div class="controls">
+      <button id="reset" class="btn secondary">↻ 리셋</button>
+      <button id="start" class="btn primary">🚀 AI 작동 확인</button>
+    </div>
+
+    <div class="demo-area">
+      <div id="step1" class="step">
+        <div class="step-title">1️⃣ 야간 알람 수집 (18:00 ~ 08:00)</div>
+        <div class="step-status">전체 등급(Critical, Major, Warning, Minor)의 알람을 자동으로 수집합니다...</div>
+        <div id="data1" class="step-data">
+          <div id="alarms-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; background: white;">
+            <!-- 알람들이 여기에 동적으로 추가됨 -->
+          </div>
+          📊 <strong>총 수집: <span id="alarm-count">0</span>건</strong><br>
+          <span id="alarm-details" style="opacity: 0; transition: opacity 0.5s ease;">• <strong style="color:#ef4444">Critical: 3건 (야간 통화 완료)</strong> | Major: 234건 (8%) | Warning: 487건 (17%) | Minor: 126건 (5%) | 기타: 2,000건 (70%)</span>
+        </div>
+      </div>
+
+      <div id="step2" class="step">
+        <div class="step-title">2️⃣ LLM 분석 및 요약 (매일 08:00)</div>
+        <div class="step-status">AI가 수천 건의 알람을 분석하고 핵심만 추출합니다...</div>
+        <div id="data2" class="step-data">
+          🤖 Dify LLM 분석 중...<br>
+          • 패턴 인식: 반복 알람 5건 발견<br>
+          • 우선순위 분류: 주의 필요 2건<br>
+          • 요약 생성 완료 ✓
+        </div>
+      </div>
+
+      <div id="step3" class="step">
+        <div class="step-title">3️⃣ 서버 담당자 및 관련 부서 공유</div>
+        <div class="step-status">요약 리포트를 서버 담당자와 관련 부서에 전달합니다...</div>
+        <div id="data3" class="step-data">
+          📢 공유 완료:<br>
+          • Swing 메일: WEB 서버 담당팀 (12명) ✓<br>
+          • Swing 메일: DB 서버 담당팀 (8명) ✓<br>
+          • Swing 메일: 인프라 운영팀 (15명) ✓
+        </div>
+      </div>
+
+      <div id="report" class="report-box">
+        <h3>
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+          </svg>
+          📄 일일 상황 보고서 (2025-10-18 08:00)
+        </h3>
+        <div class="report-item" style="background:#fee2e2;border-left:4px solid #ef4444">
+          <strong style="color:#dc2626">🚨 Critical 긴급 조치 완료:</strong><br>
+          • DB-01 서버: 다운 감지 (02:15) → 담당자 통화 완료 → 재기동 완료 (02:42)<br>
+          • API-MAIN: 응답 없음 (03:47) → 담당자 통화 완료 → 서비스 복구 (04:12)<br>
+          • WEB-05: 메모리 과부하 (05:23) → 담당자 통화 완료 → 프로세스 재시작 완료 (05:35)
+        </div>
+        <div class="report-item">
+          <strong>✅ 전반적 상태:</strong> Critical 건 모두 조치 완료 / 정상 알람 98.2%
+        </div>
+        <div class="report-item">
+          <strong>⚠️ 주의 필요 항목:</strong><br>
+          • WEB-01 서버: Disk 사용량 72% 도달 (야간 11회 발생)<br>
+          • DB-03 메모리: 사용률 83% 초과 (5회 발생, 현재 정상 복구)
+        </div>
+        <div class="report-item">
+          <strong>🔄 반복 알람:</strong><br>
+          • CACHE-02: Redis 연결 지연 경고 (3회, 평균 200ms → 조치 권장)<br>
+          • API-GW: Rate limit 근접 (2회, 트래픽 증가 추세)
+        </div>
+        <div class="report-item">
+          <strong>📊 통계:</strong> 총 2,847건 분석 완료 | 처리 시간: 3.2초
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div>© <span id="year"></span> SHINHAN DS · AI 인프라비서 · 일일 상황 보고 체험</div>
+    </footer>
+  </div>
+
+  <script>
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    
+    const $start = document.getElementById('start');
+    const $reset = document.getElementById('reset');
+    const $step1 = document.getElementById('step1');
+    const $step2 = document.getElementById('step2');
+    const $step3 = document.getElementById('step3');
+    const $data1 = document.getElementById('data1');
+    const $data2 = document.getElementById('data2');
+    const $data3 = document.getElementById('data3');
+    const $report = document.getElementById('report');
+    const $alarmsList = document.getElementById('alarms-list');
+    const $alarmCount = document.getElementById('alarm-count');
+    const $alarmDetails = document.getElementById('alarm-details');
+    
+    let running = false;
+    
+    document.getElementById('year').textContent = new Date().getFullYear();
+    
+    // 실제 알람 예시 데이터
+    const sampleAlarms = [
+      { level: 'CRITICAL', server: 'DB-01', msg: '서버 다운 감지 (02:15) → 담당자 통화 완료 → 재기동 완료' },
+      { level: 'INFO', server: 'WEB-01', msg: 'HTTP 200 response time: 45ms' },
+      { level: 'MAJOR', server: 'DB-02', msg: 'Database connection pool exhausted' },
+      { level: 'WARNING', server: 'WEB-01', msg: 'Disk usage: 72%' },
+      { level: 'INFO', server: 'API-GW', msg: 'Health check: OK' },
+      { level: 'CRITICAL', server: 'API-MAIN', msg: '응답 없음 (03:47) → 담당자 통화 완료 → 서비스 복구' },
+      { level: 'WARNING', server: 'CACHE-02', msg: 'Redis connection latency: 210ms' },
+      { level: 'MAJOR', server: 'WEB-03', msg: 'Service response time > 3s' },
+      { level: 'MINOR', server: 'WEB-03', msg: 'CPU usage spike: 78%' },
+      { level: 'INFO', server: 'LB-01', msg: 'Active connections: 234' },
+      { level: 'WARNING', server: 'DB-03', msg: 'Memory usage: 83%' },
+      { level: 'CRITICAL', server: 'WEB-05', msg: '메모리 과부하 (05:23) → 담당자 통화 완료 → 프로세스 재시작 완료' },
+      { level: 'INFO', server: 'API-GW', msg: 'Request rate: 1,234 req/min' },
+      { level: 'MINOR', server: 'CACHE-01', msg: 'Cache miss rate: 15%' },
+      { level: 'MAJOR', server: 'API-02', msg: 'API gateway error rate: 5%' },
+      { level: 'WARNING', server: 'API-GW', msg: 'Rate limit approaching: 85%' },
+      { level: 'INFO', server: 'DB-01', msg: 'Connection pool: 45/100' },
+      { level: 'MINOR', server: 'WEB-01', msg: 'Response time degradation: 5%' },
+      { level: 'INFO', server: 'MONITOR', msg: 'System health check completed' },
+      { level: 'WARNING', server: 'STORAGE-01', msg: 'Disk I/O wait time: 12ms' },
+      { level: 'MAJOR', server: 'DB-04', msg: 'Replication lag detected: 30s' },
+      { level: 'INFO', server: 'WEB-04', msg: 'Log rotation completed' },
+      { level: 'MINOR', server: 'DB-02', msg: 'Slow query detected: 3.2s' },
+    ];
+    
+    function getLevelColor(level) {
+      if (level === 'CRITICAL') return '#b91c1c';
+      if (level === 'MAJOR') return '#dc2626';
+      if (level === 'WARNING') return '#f59e0b';
+      if (level === 'MINOR') return '#f97316';
+      if (level === 'INFO') return '#3b82f6';
+      return '#64748b';
+    }
+    
+    async function addAlarms() {
+      $alarmsList.innerHTML = '';
+      let count = 0;
+      
+      for (const alarm of sampleAlarms) {
+        count++;
+        const alarmDiv = document.createElement('div');
+        alarmDiv.style.cssText = 'padding: 6px; margin-bottom: 6px; border-left: 3px solid ' + getLevelColor(alarm.level) + '; background: #f8fafc; border-radius: 4px; font-size: 12px; animation: slideIn 0.3s ease;';
+        alarmDiv.innerHTML = `<strong style="color: ${getLevelColor(alarm.level)}">[${alarm.level}]</strong> ${alarm.server}: ${alarm.msg}`;
+        $alarmsList.appendChild(alarmDiv);
+        
+        $alarmCount.textContent = count;
+        $alarmsList.scrollTop = $alarmsList.scrollHeight;
+        
+        await sleep(150);
+      }
+      
+      // 나머지 카운트 빠르게 증가
+      for (let i = count; i <= 2847; i += 50) {
+        $alarmCount.textContent = i;
+        await sleep(50);
+      }
+      $alarmCount.textContent = '2,847';
+      
+      // 총 수집이 완료된 후 세부 건수 표시
+      await sleep(300);
+      $alarmDetails.style.opacity = '1';
+    }
+    
+    async function runDemo() {
+      if (running) return;
+      running = true;
+      $start.disabled = true;
+      $reset.disabled = false;
+      
+      // Reset states
+      $step1.classList.remove('active', 'done');
+      $step2.classList.remove('active', 'done');
+      $step3.classList.remove('active', 'done');
+      $data1.classList.remove('show');
+      $data2.classList.remove('show');
+      $data3.classList.remove('show');
+      $report.classList.remove('show');
+      $alarmsList.innerHTML = '';
+      $alarmCount.textContent = '0';
+      $alarmDetails.style.opacity = '0';
+      
+      // Step 1: 수집 (알람들이 실시간으로 추가됨)
+      $step1.classList.add('active');
+      $step1.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await sleep(800);
+      $data1.classList.add('show');
+      await sleep(300);
+      await addAlarms();  // 알람 실시간 수집
+      await sleep(1000);
+      $step1.classList.remove('active');
+      $step1.classList.add('done');
+      
+      // Step 2: 분석
+      $step2.classList.add('active');
+      $step2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await sleep(1500);
+      $data2.classList.add('show');
+      await sleep(2500);
+      $step2.classList.remove('active');
+      $step2.classList.add('done');
+      
+      // Step 3: 공유
+      $step3.classList.add('active');
+      $step3.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await sleep(1500);
+      $data3.classList.add('show');
+      await sleep(2000);
+      $step3.classList.remove('active');
+      $step3.classList.add('done');
+      
+      // Show report
+      await sleep(1000);
+      $report.classList.add('show');
+      $report.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      running = false;
+      $start.disabled = false;
+    }
+    
+    function reset() {
+      $step1.classList.remove('active', 'done');
+      $step2.classList.remove('active', 'done');
+      $step3.classList.remove('active', 'done');
+      $data1.classList.remove('show');
+      $data2.classList.remove('show');
+      $data3.classList.remove('show');
+      $report.classList.remove('show');
+      $alarmsList.innerHTML = '';
+      $alarmCount.textContent = '0';
+      $alarmDetails.style.opacity = '0';
+      $reset.disabled = true;
+    }
+    
+    $start.onclick = runDemo;
+    $reset.onclick = reset;
+    $reset.disabled = true;
+  </script>
+</body>
+</html>

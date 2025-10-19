@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 from app.config import settings
 from app.db import (
@@ -79,7 +79,7 @@ def start_escalation(summary: str, tts_text: str) -> dict:
         return {"incident_id": incident.id, "call_id": call_id, "to": callee, "role": role}
 
 
-def acknowledge_incident(incident_id: int, dtmf: str | None = None) -> None:
+def acknowledge_incident(incident_id: int, dtmf: Optional[str] = None) -> None:
     with get_session() as session:
         if get_incident(session, incident_id) is None:
             return

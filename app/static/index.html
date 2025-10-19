@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>AI 인프라비서 체험</title>
+  <style>
+    :root {
+      --primary:#0046ff;
+      --text:#1e293b;
+      --card:#ffffff;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--text);
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 1000px;
+      width: 100%;
+      background: var(--card);
+      padding: 50px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .brand {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      margin-bottom: 30px;
+    }
+    h1 {
+      font-size: 42px;
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    .subtitle {
+      font-size: 18px;
+      color: #64748b;
+      margin-bottom: 50px;
+    }
+    
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    
+    .option-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+      border: 3px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 40px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+    .option-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    .option-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+      border-color: #667eea;
+    }
+    .option-card:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .option-icon {
+      font-size: 60px;
+      margin-bottom: 20px;
+      display: block;
+    }
+    .option-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .option-desc {
+      font-size: 15px;
+      color: #64748b;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .option-features {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+    .option-features li {
+      font-size: 14px;
+      color: #475569;
+      padding-left: 24px;
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .option-features li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #10b981;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .option-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+    .option-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 30px;
+      border-top: 2px solid #e2e8f0;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    
+    @media only screen and (max-width: 900px) {
+      .options {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media only screen and (max-width: 760px) {
+      body { 
+        padding: 12px; 
+        align-items: flex-start;
+        padding-top: 20px;
+      }
+      .container { 
+        padding: 28px 20px;
+        border-radius: 16px;
+      }
+      .brand {
+        padding: 8px 16px;
+        font-size: 12px;
+        margin-bottom: 20px;
+      }
+      h1 { 
+        font-size: 28px;
+        margin-bottom: 12px;
+      }
+      .subtitle { 
+        font-size: 15px; 
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
+      .options {
+        gap: 20px;
+      }
+      .option-card { 
+        padding: 24px;
+        border-radius: 12px;
+      }
+      .option-icon { 
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+      .option-title { 
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+      .option-desc { 
+        font-size: 13px;
+        line-height: 1.6;
+        margin-bottom: 16px;
+      }
+      .option-features {
+        margin-bottom: 16px;
+      }
+      .option-features li {
+        font-size: 13px;
+        padding-left: 20px;
+        margin-bottom: 6px;
+      }
+      .option-btn {
+        padding: 12px 24px;
+        font-size: 15px;
+        border-radius: 8px;
+      }
+      footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        font-size: 12px;
+      }
+    }
+    
+    @media only screen and (max-width: 480px) {
+      body {
+        padding: 8px;
+        padding-top: 16px;
+      }
+      .container {
+        padding: 24px 16px;
+      }
+      h1 {
+        font-size: 24px;
+      }
+      .subtitle {
+        font-size: 14px;
+      }
+      .option-card {
+        padding: 20px;
+      }
+      .option-icon {
+        font-size: 42px;
+      }
+      .option-title {
+        font-size: 18px;
+      }
+      .option-desc {
+        font-size: 12px;
+      }
+      .option-features li {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <span class="brand">SHINHAN DS</span>
+    <h1>AI 인프라비서 체험</h1>
+    <p class="subtitle">실제 AI 자동화 시스템을 직접 체험해보세요. 아래 두 가지 체험 중 선택하세요.</p>
+
+    <div class="options">
+      <!-- Option 1: 긴급 전화 알림 -->
+      <a href="/static/simulator_experience.html" class="option-card">
+        <span class="option-icon">📞</span>
+        <div class="option-title">긴급 전화 알림 체험</div>
+        <div class="option-desc">장애 이벤트 발생 시 AI가 즉시 분석하여 시스템명과 핵심 내용을 추출하고, 긴급성을 재판단하여 전화 발송 여부를 결정합니다.<br><span style="font-size:0.9em;color:#64748b;margin-top:4px;display:inline-block">(Critical은 즉시 발송, Major는 내용 분석 후 판단)</span></div>
+        <ul class="option-features">
+          <li>AI 기반 장애 메시지 분석 및 긴급성 재판단</li>
+          <li>실제 전화 발신 체험</li>
+          <li>순차 에스컬레이션 (정담당자 → 부담당자)</li>
+          <li>개인화된 음성 메시지 (담당자명 포함)</li>
+          <li>상황근무자 호전환 기능 (키패드 1번)</li>
+        </ul>
+        <div class="option-btn">🚀 긴급 알림 체험하기</div>
+      </a>
+
+      <!-- Option 2: 일일 상황 보고 -->
+      <a href="/static/daily_report.html" class="option-card">
+        <span class="option-icon">📊</span>
+        <div class="option-title">일일 상황 보고 체험</div>
+        <div class="option-desc">매일 아침 AI가 야간 알람을 자동으로 수집·분석·요약하여 관련 부서에 공유하는 시스템을 체험합니다.</div>
+        <ul class="option-features">
+          <li>야간 알람 자동 수집</li>
+          <li>LLM 기반 자동 분석</li>
+          <li>핵심만 요약한 리포트</li>
+          <li>Swing 메일 자동 공유</li>
+        </ul>
+        <div class="option-btn">🚀 일일 보고 체험하기</div>
+      </a>
+    </div>
+
+    <footer>
+      © <span id="year"></span> SHINHAN DS · AI 인프라비서 체험 시스템
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
+

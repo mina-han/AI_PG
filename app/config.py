@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Optional
 
 from dotenv import load_dotenv
 
@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def getenv(name: str, default: str | None = None) -> str:
+def getenv(name: str, default: Optional[str] = None) -> str:
     value = os.getenv(name, default)
     if value is None:
         raise RuntimeError(f"Missing required environment variable: {name}")

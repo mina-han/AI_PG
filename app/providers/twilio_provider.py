@@ -1,9 +1,14 @@
+from typing import Optional
+from datetime import datetime
 from fastapi import APIRouter, Response, Form, Request
 from twilio.rest import Client
 
 from app.config import settings
 from app.providers.base import VoiceProvider
 from app.db import get_session, get_incident
+
+# 호전환 기록 저장 (메모리 기반)
+transfer_logs = {}
 
 
 class TwilioProvider(VoiceProvider):
@@ -40,7 +45,7 @@ router = APIRouter(prefix="/twilio", tags=["twilio"])
 
 
 @router.get("/voice")
-def twilio_voice(incident_id: int, text: str | None = None) -> Response:
+def twilio_voice(incident_id: int, text: Optional[str] = None) -> Response:
     # Twilio fetches TwiML; repeat message 2 times (no DTMF input required)
     if text:
         speak_text = text
@@ -67,7 +72,7 @@ def twilio_voice(incident_id: int, text: str | None = None) -> Response:
 
 
 @router.post("/gather")
-def twilio_gather(incident_id: int, Digits: str | None = Form(None)) -> Response:  # Twilio posts Digits
+def twilio_gather(incident_id: int, Digits: Optional[str] = Form(None)) -> Response:  # Twilio posts Digits
     from app.services.escalation import acknowledge_incident, retry_next
     
     if Digits == "1":
@@ -92,6 +97,61 @@ def twilio_gather(incident_id: int, Digits: str | None = Form(None)) -> Response
 </Response>
 """.strip()
     return Response(content=twiml, media_type="application/xml")
+
+
+@router.post("/transfer")
+async def twilio_transfer(
+    request: Request,
+    Digits: Optional[str] = Form(None), 
+    incident_id: Optional[int] = None
+) -> Response:
+    """
+    호전환 처리 (콜드 방식)
+    1번 누르면 상황근무자 번호로 바로 연결
+    """
+    # Twilio에서 전달하는 CallSid 받기
+    form = await request.form()
+    call_sid = form.get("CallSid", "unknown")
+    
+    # 디버깅 로그
+    print(f"[TRANSFER] Received Digits: {Digits}, CallSid: {call_sid}, incident_id: {incident_id}")
+    
+    # 상황근무자 번호 (010-8672-1718 -> +821086721718)
+    situation_room_number = "+821086721718"
+    
+    if Digits == "1":
+        print(f"[TRANSFER] Attempting to dial {situation_room_number}")
+        
+        # 호전환 기록 저장
+        transfer_logs[call_sid] = {
+            "transferred": True,
+            "to_number": situation_room_number,
+            "timestamp": datetime.now().isoformat(),
+            "incident_id": incident_id
+        }
+        print(f"[TRANSFER] Saved transfer log for CallSid: {call_sid}")
+        
+        # 콜드 방식 호전환: 바로 상황근무자에게 연결
+        twiml = f"""<?xml version='1.0' encoding='UTF-8'?>
+<Response>
+  <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">상황근무자에게 연결합니다.</prosody></Say>
+  <Dial timeout="30">
+    <Number>{situation_room_number}</Number>
+  </Dial>
+  <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">연결이 종료되었습니다. 감사합니다.</prosody></Say>
+  <Hangup/>
+</Response>"""
+    else:
+        print(f"[TRANSFER] No valid digit received, ending call")
+        # 1번 외의 입력 또는 타임아웃
+        twiml = """<?xml version='1.0' encoding='UTF-8'?>
+<Response>
+  <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">감사합니다.</prosody></Say>
+  <Hangup/>
+</Response>"""
+    
+    print(f"[TRANSFER] Returning TwiML: {twiml[:100]}...")
+    return Response(content=twiml.strip(), media_type="application/xml")
 
 
 @router.post("/status")
