@@ -3,8 +3,9 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Optional
+from urllib.parse import quote
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel
 from twilio.rest import Client
 import json
@@ -12,6 +13,14 @@ import json
 from app.config import settings
 
 router = APIRouter(prefix="/simulator", tags=["simulator"])
+
+
+@router.api_route("/twiml/{incident_id}", methods=["GET", "POST"])
+def get_twiml(incident_id: int, contact_name: Optional[str] = None) -> Response:
+    """TwiML을 반환하는 endpoint (URL 방식 - GET/POST 모두 지원)"""
+    twiml = create_twiml("", contact_name, incident_id)
+    print(f"[TWIML ENDPOINT] Returning TwiML for incident {incident_id}")
+    return Response(content=twiml, media_type="application/xml")
 
 
 class SimulatorCallRequest(BaseModel):
@@ -24,47 +33,49 @@ class SimulatorCallRequest(BaseModel):
 
 
 def create_twiml(message: str, contact_name: str = None, incident_id: int = None) -> str:
-    """TwiML 생성 - 각 문장을 별도 Say 태그로 분리하여 첫 글자 잘림 방지"""
-    # 이름이 있으면 메시지 앞에 추가
+    """TwiML 생성 - 메시지 + Gather (XML 이스케이프)"""
+    import html
+    
+    # DB에서 실제 메시지 가져오기
+    from app.db import get_session, get_incident
+    with get_session() as session:
+        inc = get_incident(session, incident_id)
+        full_message = inc.tts_text if inc else "긴급 상황입니다."
+    
+    # 담당자 이름 포함
     if contact_name:
-        full_message = f"{contact_name} 담당자님, {message}"
-    else:
-        full_message = message
+        full_message = f"{contact_name} 담당자님, {full_message}"
     
-    # 각 문장을 분리
-    sentences = [s.strip() for s in full_message.split('. ') if s.strip()]
+    # XML 특수문자 이스케이프
+    full_message = html.escape(full_message)
     
-    # 각 문장을 별도의 Say 태그로 생성
-    say_tags = []
-    for sentence in sentences:
-        # 문장 시작 전 짧은 pause로 첫 글자 보호
-        say_tags.append('<Pause length="0.2"/>')
-        say_tags.append(f'<Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">{sentence}.</prosody></Say>')
-        # 문장 끝 pause는 최소화
+    # Action URL
+    action_url = f"{settings.public_base_url}/twilio/transfer?incident_id={incident_id}"
+    if contact_name:
+        action_url += f"&contact_name={quote(contact_name)}"
     
-    first_part = '\n  '.join(say_tags)
+    # Action URL도 이스케이프 (& 기호 때문)
+    action_url = html.escape(action_url)
     
-    # Gather 액션 URL 생성 - 절대 URL 사용 (Twilio는 절대 URL 필요)
-    gather_action = f"{settings.public_base_url}/twilio/transfer"
-    if incident_id:
-        gather_action = f"{settings.public_base_url}/twilio/transfer?incident_id={incident_id}"
+    # TwiML 생성 (메시지 + 안내를 2번 반복)
+    twiml = f'<?xml version="1.0" encoding="UTF-8"?><Response>'
+    # 1차 반복
+    twiml += f'<Say language="ko-KR">{full_message}</Say>'
+    twiml += '<Pause length="1"/>'
+    twiml += '<Say language="ko-KR">상황근무자 연결은 1번, 장애 문자 전송은 2번을 눌러주세요.</Say>'
+    twiml += '<Pause length="1"/>'
+    # 2차 반복 (Gather 포함)
+    twiml += f'<Gather action="{action_url}" method="POST" numDigits="1" timeout="10">'
+    twiml += f'<Say language="ko-KR">{full_message}</Say>'
+    twiml += '<Pause length="1"/>'
+    twiml += '<Say language="ko-KR">상황근무자 연결은 1번, 장애 문자 전송은 2번을 눌러주세요.</Say>'
+    twiml += '</Gather>'
+    twiml += '<Hangup/></Response>'
     
-    return f"""<?xml version='1.0' encoding='UTF-8'?>
-<Response>
-  {first_part}
-  <Pause length="0.5"/>
-  <Gather action="{gather_action}" method="POST" numDigits="1" timeout="10">
-    <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">상황근무자와의 통화연결을 원하시면 1번을 눌러주세요.</prosody></Say>
-    <Pause length="1"/>
-    <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">다시 한 번 말씀드립니다.</prosody></Say>
-    <Pause length="1"/>
-    {first_part}
-    <Pause length="0.5"/>
-    <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">상황근무자와의 통화연결을 원하시면 1번을 눌러주세요.</prosody></Say>
-  </Gather>
-  <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">감사합니다.</prosody></Say>
-  <Hangup/>
-</Response>"""
+    print(f"[TWIML-ESCAPED] incident {incident_id}:")
+    print(twiml[:300])
+    
+    return twiml
 
 
 async def check_call_status(client: Client, call_sid: str, max_wait: int = 20) -> dict:
@@ -189,6 +200,21 @@ async def escalate_with_status(request: SimulatorCallRequest):
     
     client = Client(settings.twilio_account_sid, settings.twilio_auth_token)
     
+    # Incident 생성 (SMS에서 사용할 수 있도록)
+    from app.db import get_session, create_incident
+    incident_id = None
+    try:
+        with get_session() as session:
+            incident = create_incident(
+                session=session,
+                summary=request.incident_summary,
+                tts_text=request.tts_text
+            )
+            incident_id = incident.id
+            print(f"[SIMULATOR] Created incident {incident_id} for SMS")
+    except Exception as e:
+        print(f"[SIMULATOR] Failed to create incident: {e}")
+    
     # 담당자 리스트 (정-부-정-부)
     contacts = [
         {"name": request.primary_name, "phone": request.primary_phone, "role": "정담당자"},
@@ -210,14 +236,16 @@ async def escalate_with_status(request: SimulatorCallRequest):
         await asyncio.sleep(0.1)
         
         try:
-            # 각 담당자 이름을 포함한 개인화된 TwiML 생성
-            twiml = create_twiml(request.tts_text, contact['name'])
+            # URL 방식으로 TwiML 제공 (inline 대신)
+            twiml_url = f"{settings.public_base_url}/simulator/twiml/{incident_id}?contact_name={quote(contact['name'])}"
             
-            # 전화 발신
+            print(f"[SIMULATOR] TwiML URL: {twiml_url}")
+            
+            # 전화 발신 (URL 방식)
             call = client.calls.create(
                 to=contact['phone'],
                 from_=settings.twilio_from_number,
-                twiml=twiml,
+                url=twiml_url,
                 timeout=settings.call_timeout_seconds
             )
             
@@ -295,3 +323,4 @@ def get_transfer_log(call_sid: str):
             "found": False,
             "transferred": False
         }
+
