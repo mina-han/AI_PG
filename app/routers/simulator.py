@@ -37,10 +37,10 @@ def create_twiml(message: str, contact_name: str = None, incident_id: int = None
     # 각 문장을 별도의 Say 태그로 생성
     say_tags = []
     for sentence in sentences:
-        # 문장 시작 전 충분한 pause로 첫 글자 보호
-        say_tags.append('<Pause length="0.5"/>')
+        # 문장 시작 전 짧은 pause로 첫 글자 보호
+        say_tags.append('<Pause length="0.3"/>')
         say_tags.append(f'<Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">{sentence}.</prosody></Say>')
-        say_tags.append('<Pause length="0.8"/>')
+        say_tags.append('<Pause length="0.4"/>')
     
     first_part = '\n  '.join(say_tags)
     
@@ -52,14 +52,14 @@ def create_twiml(message: str, contact_name: str = None, incident_id: int = None
     return f"""<?xml version='1.0' encoding='UTF-8'?>
 <Response>
   {first_part}
-  <Pause length="1"/>
+  <Pause length="0.5"/>
   <Gather action="{gather_action}" method="POST" numDigits="1" timeout="10">
     <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">상황근무자와의 통화연결을 원하시면 1번을 눌러주세요.</prosody></Say>
-    <Pause length="2"/>
-    <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">다시 한 번 말씀드립니다.</prosody></Say>
-    <Pause length="2"/>
-    {first_part}
     <Pause length="1"/>
+    <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">다시 한 번 말씀드립니다.</prosody></Say>
+    <Pause length="1"/>
+    {first_part}
+    <Pause length="0.5"/>
     <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">상황근무자와의 통화연결을 원하시면 1번을 눌러주세요.</prosody></Say>
   </Gather>
   <Say language="ko-KR" voice="Polly.Seoyeon"><prosody rate="100%">감사합니다.</prosody></Say>

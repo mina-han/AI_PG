@@ -730,7 +730,6 @@
               // 모바일에서 전화를 받으면 네트워크가 전환되어 브라우저 연결이 끊김
               // 통화가 끝날 때까지 대기 (약 60초)
               pushLog(`📞 통화 중입니다...`);
-              pushLog(`💡 TIP: 통화 종료 후 약 60초 이내에 자동으로 완료 처리됩니다.`);
               
               // 60초 대기 후 성공 처리
               await new Promise(r => setTimeout(r, 60000));
@@ -750,7 +749,6 @@
           if(error.message.includes('Failed to fetch') || error.message.includes('NetworkError')){
             // 통화가 끝날 때까지 대기 (약 60초)
             pushLog(`📞 통화 중입니다...`);
-            pushLog(`💡 TIP: 통화 종료 후 약 60초 이내에 자동으로 완료 처리됩니다.`);
             
             // 60초 대기 후 성공 처리
             await new Promise(r => setTimeout(r, 60000));
@@ -910,10 +908,6 @@
     
     // 5 - 호전환 기록 확인 (전화 연결 성공 시에만)
     setStepStatus(5,"active");
-    
-    // 디버깅: callSuccess 상태 확인
-    console.log(`[DEBUG] callSuccess: ${callSuccess}, apiResult:`, apiResult);
-    pushLog(`🔍 전화 연결 상태: ${callSuccess ? '성공' : '실패'}`);
     
     // 전화가 최소 1번이라도 성공했을 때만 호전환 기록 확인
     if(callSuccess && apiResult && apiResult.callSid) {
