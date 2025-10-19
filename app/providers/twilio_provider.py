@@ -138,7 +138,7 @@ async def twilio_transfer(
     if Digits == "1":
         print(f"[TRANSFER] Simulating transfer to {situation_room_number} (demo mode)")
         
-        # 호전환 기록 저장
+        # 호전환 기록 저장 (메모리)
         transfer_logs[call_sid] = {
             "transferred": True,
             "to_number": situation_room_number,
@@ -147,6 +147,23 @@ async def twilio_transfer(
             "action": "call_transfer"
         }
         print(f"[TRANSFER] Saved transfer log for CallSid: {call_sid}")
+        
+        # DB에 DTMF 입력 기록 저장
+        if incident_id:
+            try:
+                with get_session() as session:
+                    from app.db import log_call_attempt
+                    log_call_attempt(
+                        session=session,
+                        incident_id=incident_id,
+                        callee=caller_number or "unknown",
+                        provider="twilio",
+                        result="ack",  # 호전환 요청 = 승인으로 처리
+                        dtmf="1"
+                    )
+                    print(f"[TRANSFER] DB에 DTMF=1 기록 저장 완료")
+            except Exception as e:
+                print(f"[TRANSFER] DB 저장 실패: {e}")
         
         # 체험용: 실제 전화 없이 메시지만 재생
         twiml = f"""<?xml version='1.0' encoding='UTF-8'?>
@@ -242,7 +259,7 @@ async def twilio_transfer(
                 sms_sent = True
                 print(f"[SMS] ✅ SMS sent successfully! MessageSid: {message.sid}")
                 
-                # SMS 전송 기록 저장
+                # SMS 전송 기록 저장 (메모리)
                 transfer_logs[call_sid] = {
                     "transferred": False,
                     "sms_sent": True,
@@ -253,6 +270,23 @@ async def twilio_transfer(
                     "action": "sms_send"
                 }
                 print(f"[SMS] Log saved for CallSid: {call_sid}")
+                
+                # DB에 DTMF 입력 기록 저장
+                if incident_id:
+                    try:
+                        with get_session() as session:
+                            from app.db import log_call_attempt
+                            log_call_attempt(
+                                session=session,
+                                incident_id=incident_id,
+                                callee=caller_number,
+                                provider="twilio",
+                                result="ack",  # SMS 전송 = 승인으로 처리
+                                dtmf="2"
+                            )
+                            print(f"[SMS] DB에 DTMF=2 기록 저장 완료")
+                    except Exception as e:
+                        print(f"[SMS] DB 저장 실패: {e}")
             except Exception as e:
                 import traceback
                 print(f"[SMS] ❌ Exception occurred: {e}")
