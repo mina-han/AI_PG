@@ -91,12 +91,12 @@ async def check_call_status(client: Client, call_sid: str, max_wait: int = 20) -
             
             # 통화 상태별 처리
             if status == "completed":
-                # completed 상태를 처음 감지했을 때, duration이 업데이트될 때까지 재조회 (최대 4초)
+                # completed 상태를 처음 감지했을 때, duration이 업데이트될 때까지 빠르게 재조회
                 duration = 0
                 answered_by = None
                 
-                for retry in range(4):  # 4번 재시도 (0.8초 간격)
-                    await asyncio.sleep(0.8)
+                for retry in range(3):  # 3번 재시도 (0.4초 간격, 총 1.2초)
+                    await asyncio.sleep(0.4)
                     call = client.calls(call_sid).fetch()
                     
                     try:
@@ -140,13 +140,13 @@ async def check_call_status(client: Client, call_sid: str, max_wait: int = 20) -
                 continue
             
             elif status == "in-progress":
-                # 전화가 연결되어 통화 중 상태 - completed 될 때까지 대기
+                # 전화가 연결되어 통화 중 상태 - completed 될 때까지 빠르게 체크
                 if not in_progress_detected:
                     in_progress_detected = True
                     in_progress_start_time = time.time()
                     print(f"Call in progress detected at {in_progress_start_time - start_time:.1f}s")
                 print(f"Call in progress - waiting for completion...")
-                await asyncio.sleep(1)  # 통화 중에는 천천히 체크
+                await asyncio.sleep(0.5)  # 통화 중 빠르게 체크하여 종료 즉시 감지
                 continue
                 
         except Exception as e:
