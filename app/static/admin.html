@@ -606,8 +606,16 @@
               </thead>
               <tbody>
                 ${data.map(inc => {
-                  const statusBadge = inc.status === 'ack' ? 'badge-success' : 'badge-warning';
-                  const statusText = inc.status === 'ack' ? '✅ 확인됨' : '⏳ 미확인';
+                  let statusBadge = 'badge-warning';
+                  let statusText = '⏳ 미확인';
+                  
+                  if (inc.status === 'ack') {
+                    statusBadge = 'badge-success';
+                    statusText = '✅ 대응완료';
+                  } else if (inc.status === 'answered') {
+                    statusBadge = 'badge-warning';
+                    statusText = '⚠️ 미대응';
+                  }
                   
                   // 통화 결과를 카운트해서 요약
                   const resultCounts = {};

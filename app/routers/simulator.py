@@ -258,10 +258,10 @@ async def escalate_with_status(request: SimulatorCallRequest):
             # 통화 상태 확인 (최대 20초 대기 - 빠른 실패 감지)
             result = await check_call_status(client, call_sid, max_wait=20)
             
-            # DB에 통화 결과 저장
+            # DB에 통화 결과 저장 및 Incident 상태 업데이트
             if incident_id:
                 try:
-                    from app.db import log_call_attempt
+                    from app.db import log_call_attempt, get_incident
                     with get_session() as session:
                         call_result = "answered" if result['status'] == 'answered' else "no_answer"
                         log_call_attempt(
@@ -273,6 +273,15 @@ async def escalate_with_status(request: SimulatorCallRequest):
                             duration_sec=result.get('duration', 0)
                         )
                         print(f"[SIMULATOR] DB에 통화 기록 저장: {call_result}")
+                        
+                        # 전화를 받았으면 Incident 상태를 "answered"로 변경 (아직 대응은 안함)
+                        if result['status'] == 'answered':
+                            inc = get_incident(session, incident_id)
+                            if inc and inc.status == "new":
+                                inc.status = "answered"
+                                session.add(inc)
+                                session.commit()
+                                print(f"[SIMULATOR] Incident #{incident_id} 상태를 'answered'로 변경 (미대응)")
                 except Exception as e:
                     print(f"[SIMULATOR] DB 저장 실패: {e}")
             

@@ -206,11 +206,8 @@ async def twilio_transfer(
         print(f"[SMS] Final caller_number: {caller_number}")
         print(f"[SMS] incident_id: {incident_id}")
         
-        # caller_number 검증
-        if not caller_number:
-            print(f"[SMS] ERROR: caller_number is EMPTY!")
-            sms_sent = False
-        elif not incident_id:
+        # incident_id 검증 및 폴백
+        if not incident_id:
             print(f"[SMS] WARNING: incident_id is EMPTY! Trying to get latest incident...")
             # incident_id가 없으면 가장 최근 incident 가져오기
             try:
@@ -229,6 +226,7 @@ async def twilio_transfer(
         
         if caller_number:
             try:
+                from app.db import get_incident
                 sms_message = None
                 
                 # incident_id가 있으면 실제 메시지 가져오기
@@ -238,21 +236,24 @@ async def twilio_transfer(
                         inc = get_incident(session, incident_id)
                         if inc:
                             print(f"[SMS] Incident found: {inc.tts_text[:30]}...")
-                            name_prefix = f"{contact_name} 담당자님,\n\n" if contact_name else ""
                             # 한국 시간으로 변환 (DB는 UTC로 저장되므로 먼저 UTC로 지정 후 KST로 변환)
                             from zoneinfo import ZoneInfo
                             utc_time = inc.created_at.replace(tzinfo=ZoneInfo("UTC"))
                             kst_time = utc_time.astimezone(ZoneInfo("Asia/Seoul"))
-                            sms_message = f"{name_prefix}[긴급 장애 알림]\n{inc.tts_text}\n\n발생시각: {kst_time.strftime('%Y-%m-%d %H:%M:%S')} (KST)\n신속한 확인 부탁드립니다."
+                            # 한국 시간 형식
+                            time_str = kst_time.strftime('%m/%d %H:%M')
+                            # 담당자명과 메시지 간결화
+                            name_prefix = f"{contact_name} 담당자님,\n" if contact_name else ""
+                            sms_message = f"{name_prefix}[긴급 장애]\n{inc.tts_text}\n\n발생시각: {time_str}\n확인 부탁드립니다."
                 
                 # incident가 없으면 기본 메시지 사용
                 if not sms_message:
                     print(f"[SMS] Using default message (no incident found)")
                     from zoneinfo import ZoneInfo
                     now_kst = datetime.now(ZoneInfo("Asia/Seoul"))
-                    now_str = now_kst.strftime('%Y-%m-%d %H:%M:%S')
-                    name_prefix = f"{contact_name} 담당자님,\n\n" if contact_name else ""
-                    sms_message = f"{name_prefix}[긴급 장애 알림]\n단위DB 서버 다운 Critical 장애가 발생했습니다.\n\n발생시각: {now_str} (KST)\n담당자님의 신속한 확인 부탁드립니다."
+                    time_str = now_kst.strftime('%m/%d %H:%M')
+                    name_prefix = f"{contact_name} 담당자님,\n" if contact_name else ""
+                    sms_message = f"{name_prefix}[긴급 장애]\n단위DB 서버 다운 Critical\n\n발생시각: {time_str}\n확인 부탁드립니다."
                 
                 print(f"[SMS] Prepared message (length: {len(sms_message)})")
                 
