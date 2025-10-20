@@ -157,6 +157,9 @@
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.5s ease;
+      word-break: keep-all;
+      white-space: normal;
+      line-height: 1.8;
     }
     .step-data.show {
       max-height: 500px;
@@ -404,7 +407,7 @@
     <div class="demo-area">
       <div id="step1" class="step">
         <div class="step-title">1️⃣ 야간 알람 수집 (18:00 ~ 08:00)</div>
-        <div class="step-status">전체 등급(Critical, Major, Warning, Minor)의 알람을 자동으로 수집합니다...</div>
+        <div class="step-status">전체 등급(Critical, Major, Warning, Minor)의 알람을 자동으로 수집합니다.</div>
         <div id="data1" class="step-data">
           <div id="alarms-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; background: white;">
             <!-- 알람들이 여기에 동적으로 추가됨 -->
@@ -416,7 +419,7 @@
 
       <div id="step2" class="step">
         <div class="step-title">2️⃣ LLM 분석 및 요약 (매일 08:00)</div>
-        <div class="step-status">AI가 수천 건의 알람을 분석하고 핵심만 추출합니다...</div>
+        <div class="step-status">AI가 수천 건의 알람을 분석하고 핵심만 추출합니다.</div>
         <div id="data2" class="step-data">
           🤖 Dify LLM 분석 중...<br>
           • 패턴 인식: 반복 알람 5건 발견<br>
@@ -427,12 +430,12 @@
 
       <div id="step3" class="step">
         <div class="step-title">3️⃣ 서버 담당자 및 관련 부서 공유</div>
-        <div class="step-status">요약 리포트를 서버 담당자와 관련 부서에 전달합니다...</div>
+        <div class="step-status">요약 리포트를 서버 담당자와 관련 부서에 전달합니다.</div>
         <div id="data3" class="step-data">
           📢 공유 완료:<br>
-          • Swing 메일: WEB 서버 담당팀 (12명) ✓<br>
-          • Swing 메일: DB 서버 담당팀 (8명) ✓<br>
-          • Swing 메일: 인프라 운영팀 (15명) ✓
+          <span style="white-space: nowrap;">• Swing 메일: WEB 서버 담당팀 (12명)</span><br>
+          <span style="white-space: nowrap;">• Swing 메일: DB 서버 담당팀 (8명)</span><br>
+          <span style="white-space: nowrap;">• Swing 메일: 인프라 운영팀 (15명)</span>
         </div>
       </div>
 
