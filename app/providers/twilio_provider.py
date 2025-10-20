@@ -244,7 +244,9 @@ async def twilio_transfer(
                             time_str = kst_time.strftime('%m/%d %H:%M')
                             # 담당자명과 메시지 간결화
                             name_prefix = f"{contact_name} 담당자님,\n" if contact_name else ""
-                            sms_message = f"{name_prefix}[긴급 장애]\n{inc.tts_text}\n\n발생시각: {time_str}\n확인 부탁드립니다."
+                            # SMS는 "장애가 발생했습니다."를 "장애 발생"으로 간결하게
+                            sms_text = inc.tts_text.replace(' 장애가 발생했습니다.', ' 장애 발생')
+                            sms_message = f"{name_prefix}[긴급 장애]\n{sms_text}\n\n발생시각: {time_str}"
                 
                 # incident가 없으면 기본 메시지 사용
                 if not sms_message:
@@ -253,7 +255,7 @@ async def twilio_transfer(
                     now_kst = datetime.now(ZoneInfo("Asia/Seoul"))
                     time_str = now_kst.strftime('%m/%d %H:%M')
                     name_prefix = f"{contact_name} 담당자님,\n" if contact_name else ""
-                    sms_message = f"{name_prefix}[긴급 장애]\n단위DB 서버 다운 Critical\n\n발생시각: {time_str}\n확인 부탁드립니다."
+                    sms_message = f"{name_prefix}[긴급 장애]\n단위DB 서버 다운 Critical 장애 발생\n\n발생시각: {time_str}"
                 
                 print(f"[SMS] Prepared message (length: {len(sms_message)})")
                 

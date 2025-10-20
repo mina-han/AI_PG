@@ -102,7 +102,7 @@
     }
     
     .refresh-btn {
-      background: #667eea;
+      background: #94a3b8;
       color: white;
       border: none;
       padding: 12px 24px;
@@ -111,13 +111,13 @@
       font-size: 16px;
       font-weight: 600;
       transition: all 0.2s;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 2px 8px rgba(148, 163, 184, 0.3);
     }
     
     .refresh-btn:hover {
-      background: #5568d3;
+      background: #7e8b9d;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 4px 12px rgba(148, 163, 184, 0.4);
     }
     
     .refresh-btn:active {
@@ -405,6 +405,16 @@
         margin: 2px auto;
         width: fit-content;
       }
+      
+      /* 모바일에서 메인으로 버튼 작게 */
+      .home-btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+      }
+      .home-btn svg {
+        width: 12px !important;
+        height: 12px !important;
+      }
     }
   </style>
 </head>
@@ -606,7 +616,7 @@
               </thead>
               <tbody>
                 ${data.map(inc => {
-                  let statusBadge = 'badge-warning';
+                  let statusBadge = 'badge-danger';
                   let statusText = '⏳ 미확인';
                   
                   if (inc.status === 'ack') {
@@ -623,7 +633,18 @@
                     resultCounts[call.result] = (resultCounts[call.result] || 0) + 1;
                   });
                   
-                  const callResults = Object.entries(resultCounts).map(([result, count]) => {
+                  // ack가 있으면 answered도 함께 표시 (키패드 입력 = 전화 받았다는 의미)
+                  if (resultCounts['ack'] && !resultCounts['answered']) {
+                    resultCounts['answered'] = resultCounts['ack'];
+                  }
+                  
+                  // 우선순위 순서로 정렬 (응답 -> 대응 -> 무응답 -> 실패 -> 발신중)
+                  const resultOrder = ['answered', 'ack', 'no_answer', 'failed', 'initiated'];
+                  const sortedResults = resultOrder
+                    .filter(r => resultCounts[r])
+                    .map(r => [r, resultCounts[r]]);
+                  
+                  const callResults = sortedResults.map(([result, count]) => {
                     let badge = 'badge-danger';
                     let text = result;
                     

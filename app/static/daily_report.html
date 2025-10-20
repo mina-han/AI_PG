@@ -369,6 +369,15 @@
         font-size: 12px;
         line-height: 1.6;
       }
+      /* 모바일에서 메인으로 버튼 작게 */
+      .home-btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+      }
+      .home-btn svg {
+        width: 12px !important;
+        height: 12px !important;
+      }
     }
   </style>
 </head>
@@ -376,11 +385,16 @@
 <body>
   <div class="container">
     <span class="brand">SHINHAN DS · 뱅킹인프라본부</span>
-    <h1>
-      일일 리포트 자동화 체험
-      <a href="/static/index.html" style="font-size:13px;color:#94a3b8;text-decoration:none;margin-left:8px;font-weight:400;">← 메인</a>
-    </h1>
-    <p style="font-size:14px;color:#94a3b8;margin:-8px 0 24px 0;line-height:1.4;">Sol-Dawn · 매일 아침 8시 알람 분석 결과 자동 전송</p>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h1 style="margin:0;">일일 리포트 자동화 체험</h1>
+      <a href="/static/index.html" class="home-btn" style="display:inline-flex;align-items:center;gap:4px;padding:10px 20px;background:#94a3b8;color:white;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;transition:all 0.2s;box-shadow:0 2px 8px rgba(148,163,184,0.3);">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="transform:rotate(180deg);">
+          <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+        </svg>
+        메인으로
+      </a>
+    </div>
+    <p style="font-size:14px;color:#94a3b8;margin:8px 0 24px 0;line-height:1.4;">Sol-Dawn · 매일 아침 8시 알람 분석 결과 자동 전송</p>
 
     <div class="controls">
       <button id="reset" class="btn secondary">↻ 리셋</button>

@@ -40,7 +40,7 @@ def create_twiml(message: str, contact_name: str = None, incident_id: int = None
     from app.db import get_session, get_incident
     with get_session() as session:
         inc = get_incident(session, incident_id)
-        full_message = inc.tts_text if inc else "긴급 상황입니다."
+        full_message = inc.tts_text if inc else "장애가 발생했습니다."
     
     # 담당자 이름 포함
     if contact_name:
