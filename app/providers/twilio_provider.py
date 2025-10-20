@@ -148,11 +148,13 @@ async def twilio_transfer(
         }
         print(f"[TRANSFER] Saved transfer log for CallSid: {call_sid}")
         
-        # DB에 DTMF 입력 기록 저장
+        # DB에 DTMF 입력 기록 저장 및 Incident 상태 업데이트
         if incident_id:
             try:
                 with get_session() as session:
-                    from app.db import log_call_attempt
+                    from app.db import log_call_attempt, get_incident
+                    
+                    # CallAttempt 기록
                     log_call_attempt(
                         session=session,
                         incident_id=incident_id,
@@ -162,6 +164,15 @@ async def twilio_transfer(
                         dtmf="1"
                     )
                     print(f"[TRANSFER] DB에 DTMF=1 기록 저장 완료")
+                    
+                    # Incident 상태를 "ack"로 변경
+                    inc = get_incident(session, incident_id)
+                    if inc and inc.status != "ack":
+                        inc.status = "ack"
+                        inc.acknowledged_at = datetime.utcnow()
+                        session.add(inc)
+                        session.commit()
+                        print(f"[TRANSFER] Incident #{incident_id} 상태를 'ack'로 변경 완료")
             except Exception as e:
                 print(f"[TRANSFER] DB 저장 실패: {e}")
         
@@ -271,11 +282,13 @@ async def twilio_transfer(
                 }
                 print(f"[SMS] Log saved for CallSid: {call_sid}")
                 
-                # DB에 DTMF 입력 기록 저장
+                # DB에 DTMF 입력 기록 저장 및 Incident 상태 업데이트
                 if incident_id:
                     try:
                         with get_session() as session:
-                            from app.db import log_call_attempt
+                            from app.db import log_call_attempt, get_incident
+                            
+                            # CallAttempt 기록
                             log_call_attempt(
                                 session=session,
                                 incident_id=incident_id,
@@ -285,6 +298,15 @@ async def twilio_transfer(
                                 dtmf="2"
                             )
                             print(f"[SMS] DB에 DTMF=2 기록 저장 완료")
+                            
+                            # Incident 상태를 "ack"로 변경
+                            inc = get_incident(session, incident_id)
+                            if inc and inc.status != "ack":
+                                inc.status = "ack"
+                                inc.acknowledged_at = datetime.utcnow()
+                                session.add(inc)
+                                session.commit()
+                                print(f"[SMS] Incident #{incident_id} 상태를 'ack'로 변경 완료")
                     except Exception as e:
                         print(f"[SMS] DB 저장 실패: {e}")
             except Exception as e:

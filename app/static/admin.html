@@ -609,23 +609,34 @@
                   const statusBadge = inc.status === 'ack' ? 'badge-success' : 'badge-warning';
                   const statusText = inc.status === 'ack' ? '✅ 확인됨' : '⏳ 미확인';
                   
-                  const callResults = inc.calls.map(call => {
+                  // 통화 결과를 카운트해서 요약
+                  const resultCounts = {};
+                  inc.calls.forEach(call => {
+                    resultCounts[call.result] = (resultCounts[call.result] || 0) + 1;
+                  });
+                  
+                  const callResults = Object.entries(resultCounts).map(([result, count]) => {
                     let badge = 'badge-danger';
-                    let text = call.result;
-                    if (call.result === 'answered' || call.result === 'ack') {
+                    let text = result;
+                    
+                    if (result === 'answered') {
                       badge = 'badge-success';
-                      text = '✓ 성공';
-                    } else if (call.result === 'no_answer') {
+                      text = '📞 응답';
+                    } else if (result === 'ack') {
+                      badge = 'badge-success';
+                      text = '✅ 대응';
+                    } else if (result === 'no_answer') {
                       badge = 'badge-warning';
-                      text = '✗ 무응답';
-                    } else if (call.result === 'failed') {
+                      text = '📵 무응답';
+                    } else if (result === 'failed') {
                       text = '✗ 실패';
-                    } else if (call.result === 'initiated') {
+                    } else if (result === 'initiated') {
                       badge = 'badge-info';
                       text = '→ 발신중';
                     }
                     
-                    return `<span class="badge ${badge}">${text}</span>`;
+                    const countText = count > 1 ? ` ${count}회` : '';
+                    return `<span class="badge ${badge}">${text}${countText}</span>`;
                   }).join(' ');
                   
                   // UTC 시간을 한국 시간(KST, UTC+9)으로 변환
